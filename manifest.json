@@ -1,0 +1,26 @@
+{
+  "name": "CineMatch",
+  "short_name": "CineMatch",
+  "description": "İki kişi için film eşleştirme uygulaması",
+  "start_url": "/CineMatch/",
+  "display": "standalone",
+  "background_color": "#09090f",
+  "theme_color": "#e8405a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/brkymre/CineMatch/main/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/brkymre/CineMatch/main/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["entertainment"],
+  "lang": "tr"
+}
