@@ -1,7 +1,7 @@
 {
   "name": "CineMatch",
   "short_name": "CineMatch",
-  "description": "İki kişi için film eşleştirme uygulaması",
+  "description": "Film eşleştirme uygulaması",
   "start_url": "/CineMatch/",
   "display": "standalone",
   "background_color": "#09090f",
