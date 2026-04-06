@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CineMatch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#09090f;--card:#16162a;--card2:#1e1e36;
+  --red:#e8405a;--red2:#c0336b;--red3:#ff7090;
+  --purple:#7c3aed;--purple2:#a78bfa;
+  --teal:#00c9a7;--gold:#f5c518;
+  --txt:#f0eef8;--txt2:#9894b4;--txt3:#5a5778;
+  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.13);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt)}
+#app{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 25% 15%,rgba(232,64,90,.07) 0%,transparent 55%),radial-gradient(ellipse at 75% 85%,rgba(124,58,237,.05) 0%,transparent 55%),var(--bg)}
+.frame{width:400px;height:780px;background:var(--bg);border-radius:44px;border:1.5px solid var(--bdr2);overflow:hidden;position:relative;box-shadow:0 0 90px rgba(232,64,90,.14),0 0 180px rgba(124,58,237,.06),0 40px 100px rgba(0,0,0,.7)}
+@media(max-width:440px){#app{padding:0}.frame{width:100%;height:100%;border-radius:0;border:none}}
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateY(20px);transition:opacity .3s ease,transform .3s ease}
+.scene.in{opacity:1;pointer-events:all;transform:translateY(0)}
+.scene.out{opacity:0;transform:translateY(-20px)}
+
+/* TOPBAR */
+.tbar{padding:22px 20px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.logo{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;background:linear-gradient(110deg,var(--red),var(--red3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tbar-title{font-size:15px;font-weight:600}
+.ico-btn{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--bdr2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:var(--txt2);transition:.15s;flex-shrink:0;user-select:none}
+.ico-btn:hover{background:var(--card2);color:var(--txt)}
+.lang-btn{padding:4px 12px;border-radius:20px;border:1px solid var(--bdr2);background:var(--card);color:var(--txt2);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
+.lang-btn:hover{border-color:var(--red);color:var(--txt)}
+
+/* BODY */
+.sbody{flex:1;overflow-y:auto;padding:0 20px 28px;display:flex;flex-direction:column;gap:14px}
+.sbody::-webkit-scrollbar{width:0}
+
+/* HERO */
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;gap:18px}
+.hero-orb{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--purple));display:flex;align-items:center;justify-content:center;font-size:46px;position:relative}
+.hero-orb::after{content:'';position:absolute;inset:-11px;border-radius:50%;border:1.5px solid rgba(232,64,90,.25);animation:orbR 2.5s ease-in-out infinite}
+.hero-orb::before{content:'';position:absolute;inset:-23px;border-radius:50%;border:1px solid rgba(232,64,90,.1);animation:orbR 2.5s ease-in-out infinite;animation-delay:.6s}
+@keyframes orbR{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.1);opacity:.15}}
+.hero-h{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:700;line-height:1.1}
+.hero-h em{font-style:normal;background:linear-gradient(110deg,var(--red),var(--red3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-p{font-size:13.5px;color:var(--txt2);line-height:1.7;max-width:280px;font-weight:300}
+.btns{padding:0 20px 28px;display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+
+/* BUTTONS */
+.btn-p{width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--red),var(--red2));color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:.2s}
+.btn-p:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-p:active{transform:scale(.97)}
+.btn-p:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-s{width:100%;padding:15px;border-radius:14px;border:1.5px solid var(--bdr2);background:transparent;color:var(--txt);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:.2s}
+.btn-s:hover{background:var(--card);border-color:rgba(232,64,90,.5)}
+.btn-ghost{background:none;border:none;color:var(--txt2);font-size:13px;cursor:pointer;padding:10px;font-family:inherit;text-align:center}
+
+/* FORM */
+.flabel{font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--txt3);text-transform:uppercase;margin-bottom:7px}
+.finput{width:100%;padding:14px 16px;background:var(--card);border:1.5px solid var(--bdr);border-radius:13px;color:var(--txt);font-size:15px;font-family:inherit;outline:none;transition:.2s}
+.finput::placeholder{color:var(--txt3)}
+.finput:focus{border-color:rgba(232,64,90,.6);background:var(--card2)}
+
+/* CODE BOX */
+.code-box{background:var(--card);border:1.5px dashed rgba(232,64,90,.45);border-radius:20px;padding:24px;text-align:center}
+.code-big{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:700;letter-spacing:10px;color:var(--red)}
+.code-note{font-size:12px;color:var(--txt2);margin-top:8px}
+.code-actions{display:flex;gap:8px;margin-top:16px}
+
+/* WAITING */
+.wait-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;gap:24px;text-align:center}
+.pair{display:flex;align-items:flex-start;gap:16px}
+.av{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;flex-shrink:0}
+.av.on{background:linear-gradient(135deg,var(--red),var(--red2));border:2.5px solid rgba(232,64,90,.4)}
+.av.off{background:var(--card);border:2px dashed var(--bdr2);color:var(--txt3);font-size:22px}
+.av-name{font-size:12px;margin-top:6px;font-weight:600}
+.av-status{font-size:11px;margin-top:2px}
+.av-status.ok{color:var(--teal)}
+.vs{width:40px;height:40px;border-radius:50%;background:var(--card2);border:1px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--txt3);flex-shrink:0;margin-top:14px}
+.dots{display:flex;gap:5px;margin-top:5px;justify-content:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:dp 1.3s infinite ease-in-out}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes dp{0%,80%,100%{transform:scale(.65);opacity:.4}40%{transform:scale(1.15);opacity:1}}
+
+/* STATUS TOAST */
+.toast{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--bdr2);border-radius:10px;padding:8px 16px;font-size:12px;color:var(--txt2);white-space:nowrap;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* SWIPE */
+.prog-bar{height:3px;background:var(--bdr);overflow:hidden;flex-shrink:0;margin:0 20px 5px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--purple2));border-radius:3px;transition:width .35s}
+.prog-row{padding:2px 20px 7px;display:flex;justify-content:space-between;font-size:11px;color:var(--txt3);flex-shrink:0}
+.swipe-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:0 14px}
+
+/* MOVIE CARD */
+.mcard{width:100%;max-width:346px;border-radius:26px;background:var(--card);border:1px solid var(--bdr2);overflow:hidden;position:relative;user-select:none;cursor:grab;will-change:transform}
+.mcard:active{cursor:grabbing}
+.mcard.goRight{animation:goR .38s ease forwards}
+.mcard.goLeft{animation:goL .38s ease forwards}
+.mcard.goCenter{animation:goC .3s ease forwards}
+@keyframes goR{to{transform:translateX(140%) rotate(24deg);opacity:0}}
+@keyframes goL{to{transform:translateX(-140%) rotate(-24deg);opacity:0}}
+@keyframes goC{0%{transform:scale(1)}50%{transform:scale(.86)}100%{transform:scale(1)}}
+.poster-area{width:100%;height:275px;background:var(--card2);position:relative;overflow:hidden}
+.poster-img{width:100%;height:100%;object-fit:cover;display:block}
+.poster-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;background:linear-gradient(160deg,var(--card2),#0d0d1e);position:absolute;inset:0}
+.poster-grad{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 25%,rgba(9,9,15,.98) 100%)}
+.poster-overlay{position:absolute;bottom:0;left:0;right:0;padding:13px 15px}
+.genre-pill{display:inline-block;padding:3px 10px;border-radius:20px;background:rgba(232,64,90,.18);border:1px solid rgba(232,64,90,.4);font-size:10px;font-weight:700;color:var(--red);margin-bottom:5px}
+.movie-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;line-height:1.15;margin-bottom:4px;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.movie-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2);flex-wrap:wrap;margin-bottom:6px}
+.imdb-tag{background:var(--gold);color:#1a1200;padding:2px 7px;border-radius:4px;font-weight:700;font-size:11px}
+.platforms{display:flex;gap:5px;flex-wrap:wrap}
+.plat{display:flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;border:1px solid;white-space:nowrap}
+.p-netflix{background:rgba(229,9,20,.15);border-color:rgba(229,9,20,.4);color:#ff4444}
+.p-prime{background:rgba(0,168,225,.12);border-color:rgba(0,168,225,.35);color:#00a8e1}
+.p-disney{background:rgba(17,60,219,.12);border-color:rgba(17,60,219,.35);color:#4d80ff}
+.p-apple{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:#eee}
+.p-mubi{background:rgba(255,90,54,.12);border-color:rgba(255,90,54,.35);color:#ff5a36}
+.p-hbo{background:rgba(111,0,232,.12);border-color:rgba(111,0,232,.35);color:#b87cff}
+.p-hulu{background:rgba(28,231,131,.12);border-color:rgba(28,231,131,.35);color:#1ce783}
+.p-none{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:var(--txt3)}
+.card-body{padding:11px 15px 13px}
+.card-desc{font-size:12px;color:var(--txt2);line-height:1.65;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:7px}
+.tagline{font-size:11px;color:var(--txt3);font-style:italic}
+.stamp{position:absolute;top:18px;padding:5px 12px;border-radius:8px;font-weight:800;font-size:18px;border:3px solid;opacity:0;transition:opacity .1s;pointer-events:none;z-index:20;letter-spacing:.5px}
+.stamp.like{left:12px;color:var(--teal);border-color:var(--teal);transform:rotate(-14deg)}
+.stamp.nope{right:12px;color:#ff5a5a;border-color:#ff5a5a;transform:rotate(14deg)}
+
+/* PARTNER INDICATOR */
+.partner-bar{padding:4px 20px 6px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.partner-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pdot 2s infinite}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
+.partner-text{font-size:11px;color:var(--txt2)}
+.partner-liked{color:var(--teal);font-weight:600}
+
+/* ACTIONS */
+.act-row{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 20px 20px;flex-shrink:0}
+.act{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border:none;background:none}
+.act:active .act-c{transform:scale(.84)!important}
+.act-c{border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px;transition:.15s}
+.act-c.pass{width:56px;height:56px;background:rgba(255,80,80,.1);border:1.5px solid rgba(255,80,80,.4);color:#ff5a5a}
+.act-c.watch{width:50px;height:50px;background:rgba(124,58,237,.1);border:1.5px solid rgba(124,58,237,.35);color:var(--purple2)}
+.act-c.like{width:56px;height:56px;background:rgba(0,201,167,.1);border:1.5px solid rgba(0,201,167,.4);color:var(--teal)}
+.act-c:hover{filter:brightness(1.3);transform:scale(1.1)}
+.act-label{font-size:10px;color:var(--txt3);font-weight:700;letter-spacing:.4px}
+
+/* MATCH */
+#scene-match{background:var(--bg)}
+.match-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;gap:13px;position:relative;overflow:hidden}
+.conf-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.conf{position:absolute;animation:fall linear infinite}
+@keyframes fall{0%{opacity:1;transform:translateY(-20px) rotate(0)}100%{opacity:0;transform:translateY(860px) rotate(720deg)}}
+.match-h{font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:700;background:linear-gradient(110deg,var(--red),var(--red3),var(--purple2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:popIn .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{0%{transform:scale(.35);opacity:0}100%{transform:scale(1);opacity:1}}
+.match-avs{display:flex;align-items:center;gap:14px;margin:4px 0}
+.match-av{width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;border:3px solid rgba(232,64,90,.5)}
+.heart-pulse{font-size:26px;animation:hbeat .85s infinite}
+@keyframes hbeat{0%,100%{transform:scale(1)}45%{transform:scale(1.35)}}
+.match-poster{width:110px;height:156px;border-radius:14px;overflow:hidden;border:3px solid rgba(232,64,90,.4);box-shadow:0 0 40px rgba(232,64,90,.25);background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:48px}
+.match-poster img{width:100%;height:100%;object-fit:cover;display:block}
+.match-title{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700}
+.match-sub{font-size:13px;color:var(--txt2);line-height:1.6;max-width:260px}
+
+/* LISTS */
+.list-head{padding:20px 18px 10px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.list-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700}
+.pill-count{padding:3px 11px;border-radius:20px;background:rgba(232,64,90,.15);border:1px solid rgba(232,64,90,.3);font-size:11px;font-weight:700;color:var(--red);margin-left:auto}
+.mlist{flex:1;overflow-y:auto;padding:0 14px 14px;display:flex;flex-direction:column;gap:8px}
+.mlist::-webkit-scrollbar{width:0}
+.mitem{display:flex;gap:11px;background:var(--card);border-radius:14px;padding:10px;border:1px solid var(--bdr);align-items:flex-start;transition:.15s}
+.mitem:hover{background:var(--card2)}
+.mitem-poster{width:48px;height:68px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px}
+.mitem-poster img{width:100%;height:100%;object-fit:cover;display:block}
+.mitem-info{flex:1;min-width:0}
+.mitem-title{font-weight:600;font-size:13px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mitem-meta{font-size:11px;color:var(--txt2);display:flex;gap:6px;align-items:center;margin-bottom:4px}
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700}
+.badge-m{background:rgba(232,64,90,.12);color:var(--red);border:1px solid rgba(232,64,90,.25)}
+.badge-w{background:rgba(124,58,237,.12);color:var(--purple2);border:1px solid rgba(124,58,237,.25)}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--txt2);text-align:center;padding:40px}
+.empty-icon{font-size:48px;opacity:.4}
+.empty-text{font-size:14px;line-height:1.7}
+
+/* BOTTOM NAV */
+.bnav{display:flex;padding:5px 10px 18px;border-top:1px solid var(--bdr);background:var(--bg);flex-shrink:0}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;cursor:pointer;border-radius:12px;transition:.15s;border:none;background:none}
+.bnav-item:hover{background:var(--card)}
+.bnav-icon{font-size:18px;opacity:.4;transition:.15s}
+.bnav-item.on .bnav-icon{opacity:1;filter:drop-shadow(0 0 5px rgba(232,64,90,.7))}
+.bnav-lbl{font-size:9px;color:var(--txt3);font-weight:700;letter-spacing:.3px}
+.bnav-item.on .bnav-lbl{color:var(--red)}
+
+/* FILTER */
+.fsec{display:flex;flex-direction:column}
+.fdiv{height:1px;background:var(--bdr);margin:6px 0}
+.gchips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.gchip{padding:6px 13px;border-radius:20px;border:1px solid var(--bdr2);background:none;color:var(--txt2);font-size:12px;cursor:pointer;transition:.15s;font-family:inherit;font-weight:500}
+.gchip.sel{background:var(--red);border-color:var(--red);color:#fff}
+.range-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--txt3);margin-top:4px}
+input[type=range]{width:100%;accent-color:var(--red);margin-top:8px;height:20px}
+.fval{color:var(--red);font-weight:700}
+
+/* LOADING */
+.loading-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.spin{width:42px;height:42px;border:3px solid var(--bdr2);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--txt2);text-align:center;line-height:1.6}
+.no-more{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:28px}
+.no-more-icon{font-size:52px;opacity:.45}
+.no-more-text{font-size:14px;color:var(--txt2);line-height:1.7}
+
+/* ERROR */
+.error-box{background:rgba(232,64,90,.1);border:1px solid rgba(232,64,90,.3);border-radius:12px;padding:12px 16px;font-size:12px;color:var(--red);text-align:center}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="frame">
+<div class="toast" id="toast"></div>
+
+<!-- WELCOME -->
+<div class="scene in" id="scene-welcome">
+  <div class="tbar">
+    <div class="logo">CineMatch</div>
+    <button class="lang-btn" onclick="toggleLang()">🌐 EN</button>
+  </div>
+  <div class="hero">
+    <div class="hero-orb">🎬</div>
+    <div><div class="hero-h" id="hero-h">Film seçmek<br><em>hiç bu kadar</em><br>kolay olmadı</div></div>
+    <div class="hero-p" id="hero-p">İki kişi, sonsuz film, tek eşleşme. Birlikte izleyeceğiniz filmi bulun.</div>
+  </div>
+  <div class="btns">
+    <button class="btn-p" onclick="nav('scene-create')" id="btn-create">✦ Oda Oluştur</button>
+    <button class="btn-s" onclick="nav('scene-join')" id="btn-join">Odaya Katıl</button>
+  </div>
+</div>
+
+<!-- CREATE ROOM -->
+<div class="scene" id="scene-create">
+  <div class="tbar">
+    <div class="ico-btn" onclick="nav('scene-welcome')">←</div>
+    <div class="tbar-title" id="t-create">Oda Oluştur</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="sbody">
+    <div>
+      <div class="flabel" id="l-name">Adın</div>
+      <input class="finput" id="hostName" placeholder="Adını gir..." maxlength="20">
+    </div>
+    <button class="btn-p" onclick="createRoom()" id="btn-do-create">Oda Oluştur 🎬</button>
+    <div class="code-box" id="codeBox" style="display:none">
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px" id="share-hint">Arkadaşına bu kodu gönder</div>
+      <div class="code-big" id="codeVal">–</div>
+      <div class="code-note" id="code-note">Oda kodunu paylaş</div>
+      <div class="code-actions">
+        <button class="btn-s" style="flex:1;padding:11px;font-size:13px" id="copyBtn" onclick="copyCode()">📋 Kopyala</button>
+        <button class="btn-p" style="flex:1;padding:11px;font-size:13px" onclick="nav('scene-wait')" id="btn-continue">Bekle →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JOIN ROOM -->
+<div class="scene" id="scene-join">
+  <div class="tbar">
+    <div class="ico-btn" onclick="nav('scene-welcome')">←</div>
+    <div class="tbar-title" id="t-join">Odaya Katıl</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="sbody">
+    <div>
+      <div class="flabel" id="l-name2">Adın</div>
+      <input class="finput" id="guestName" placeholder="Adını gir..." maxlength="20">
+    </div>
+    <div>
+      <div class="flabel" id="l-code">Oda Kodu</div>
+      <input class="finput" id="joinCode" placeholder="CIN-XXXX" style="text-align:center;letter-spacing:6px;font-size:20px;font-weight:700" maxlength="8" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div id="join-error" class="error-box" style="display:none"></div>
+    <button class="btn-p" onclick="joinRoom()" id="btn-do-join">Odaya Katıl →</button>
+  </div>
+</div>
+
+<!-- WAITING -->
+<div class="scene" id="scene-wait">
+  <div class="tbar">
+    <div class="ico-btn" onclick="leaveRoom()">←</div>
+    <div class="tbar-title" id="waitCode">CIN-0000</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="wait-center">
+    <div style="font-size:48px">🎭</div>
+    <div class="pair">
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="av on" id="hostAv">?</div>
+        <div class="av-name" id="hostAvName">—</div>
+        <div class="av-status ok" id="t-connected">✓ Bağlı</div>
+      </div>
+      <div class="vs">VS</div>
+      <div style="display:flex;flex-direction:column;align-items:center" id="gSlot">
+        <div class="av off">?</div>
+        <div class="av-name" style="color:var(--txt3)" id="t-waiting">Bekleniyor</div>
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--txt2);line-height:1.8" id="wait-hint">Arkadaşın kodu girince<br>otomatik başlayacak</div>
+    <div style="background:var(--card);border-radius:14px;padding:14px 20px;font-size:13px;color:var(--txt2);line-height:1.7">
+      <span id="share-code-label">Paylaşılacak kod: </span><strong style="color:var(--red);letter-spacing:4px" id="shareCodeDisplay">—</strong>
+    </div>
+  </div>
+</div>
+
+<!-- SWIPE -->
+<div class="scene" id="scene-swipe">
+  <div class="tbar">
+    <div class="logo" style="font-size:19px">CineMatch</div>
+    <div style="display:flex;gap:7px">
+      <button class="lang-btn" onclick="toggleLang()" style="font-size:11px">🌐</button>
+      <div class="ico-btn" onclick="nav('scene-filter')">🔍</div>
+      <div class="ico-btn" onclick="nav('scene-matches')">❤️</div>
+    </div>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+  <div class="prog-row">
+    <span id="progTxt">Yükleniyor...</span>
+    <span id="roomLabel" style="color:var(--txt3)">—</span>
+  </div>
+  <div class="partner-bar">
+    <div class="partner-dot"></div>
+    <div class="partner-text" id="partnerStatus">Partner çevrimiçi</div>
+  </div>
+  <div class="swipe-wrap" id="swipeWrap"></div>
+  <div class="act-row">
+    <button class="act" onclick="act('pass')"><div class="act-c pass">✕</div><div class="act-label" id="lbl-pass">GEÇ</div></button>
+    <button class="act" onclick="act('watch')"><div class="act-c watch">👁</div><div class="act-label" id="lbl-watch">İZLEDİM</div></button>
+    <button class="act" onclick="act('like')"><div class="act-c like">♥</div><div class="act-label" id="lbl-like">BEĞENDİM</div></button>
+  </div>
+</div>
+
+<!-- MATCH -->
+<div class="scene" id="scene-match">
+  <div class="match-wrap">
+    <div class="conf-layer" id="confLayer"></div>
+    <div class="match-h" id="match-h">It's a Match!</div>
+    <div class="match-avs">
+      <div class="match-av" style="background:linear-gradient(135deg,var(--red),var(--red2))" id="matchAv1">?</div>
+      <div class="heart-pulse">❤️</div>
+      <div class="match-av" style="background:linear-gradient(135deg,var(--purple),#5b21b6)" id="matchAv2">?</div>
+    </div>
+    <div id="matchPosterWrap"></div>
+    <div class="match-title" id="matchTitle"></div>
+    <div class="match-sub" id="match-sub">İkiniz de bu filmi beğendiniz!<br>Birlikte izleme listesine eklendi. 🎉</div>
+    <button class="btn-p" style="width:100%;margin-top:6px" onclick="afterMatch()" id="btn-continue-match">Keşfe Devam Et →</button>
+    <button class="btn-ghost" onclick="nav('scene-matches')" id="btn-see-matches">Eşleşmeleri Gör</button>
+  </div>
+</div>
+
+<!-- MATCHES -->
+<div class="scene" id="scene-matches">
+  <div class="list-head">
+    <div class="ico-btn" onclick="nav('scene-swipe')">←</div>
+    <div class="list-title" id="t-matches">Eşleşmeler</div>
+    <div class="pill-count" id="mCount">0</div>
+  </div>
+  <div class="mlist" id="matchList"></div>
+  <div class="bnav">
+    <button class="bnav-item on" onclick="nav('scene-matches')"><div class="bnav-icon">❤️</div><div class="bnav-lbl" id="nav-matches">EŞLEŞMELERİM</div></button>
+    <button class="bnav-item" onclick="nav('scene-swipe')"><div class="bnav-icon">🎬</div><div class="bnav-lbl" id="nav-discover">KEŞFEDİN</div></button>
+    <button class="bnav-item" onclick="nav('scene-watched')"><div class="bnav-icon">👁</div><div class="bnav-lbl" id="nav-watched">İZLEDİKLERİM</div></button>
+  </div>
+</div>
+
+<!-- WATCHED -->
+<div class="scene" id="scene-watched">
+  <div class="list-head">
+    <div class="ico-btn" onclick="nav('scene-swipe')">←</div>
+    <div class="list-title" id="t-watched">İzlediklerim</div>
+    <div class="pill-count" id="wCount">0</div>
+  </div>
+  <div class="mlist" id="watchedList"></div>
+  <div class="bnav">
+    <button class="bnav-item" onclick="nav('scene-matches')"><div class="bnav-icon">❤️</div><div class="bnav-lbl" id="nav-matches2">EŞLEŞMELERİM</div></button>
+    <button class="bnav-item" onclick="nav('scene-swipe')"><div class="bnav-icon">🎬</div><div class="bnav-lbl" id="nav-discover2">KEŞFEDİN</div></button>
+    <button class="bnav-item on" onclick="nav('scene-watched')"><div class="bnav-icon">👁</div><div class="bnav-lbl" id="nav-watched2">İZLEDİKLERİM</div></button>
+  </div>
+</div>
+
+<!-- FILTER -->
+<div class="scene" id="scene-filter">
+  <div class="tbar">
+    <div class="ico-btn" onclick="applyFilter()">←</div>
+    <div class="tbar-title" id="t-filter">Filtreler</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="sbody">
+    <div class="fsec">
+      <div class="flabel" id="l-genre">Tür</div>
+      <div class="gchips" id="genreChips"></div>
+    </div>
+    <div class="fdiv"></div>
+    <div class="fsec">
+      <div class="flabel">Min. IMDb: <span class="fval" id="imdbV">6.0</span></div>
+      <input type="range" min="5" max="9" step="0.5" value="6" id="imdbRange" oninput="document.getElementById('imdbV').textContent=parseFloat(this.value).toFixed(1)">
+      <div class="range-labels"><span>5.0</span><span>9.0</span></div>
+    </div>
+    <div class="fdiv"></div>
+    <div class="fsec">
+      <div class="flabel" id="l-year">Yıldan İtibaren: <span class="fval" id="yearV">2000</span></div>
+      <input type="range" min="1980" max="2024" step="5" value="2000" id="yearRange" oninput="document.getElementById('yearV').textContent=this.value">
+      <div class="range-labels"><span>1980</span><span>2024</span></div>
+    </div>
+    <div class="fdiv"></div>
+    <div class="fsec">
+      <div class="flabel" id="l-dur">Maks. Süre: <span class="fval" id="durV">240 dk</span></div>
+      <input type="range" min="60" max="240" step="15" value="240" id="durRange" oninput="document.getElementById('durV').textContent=this.value+(lang==='tr'?' dk':' min')">
+      <div class="range-labels"><span>60</span><span>240</span></div>
+    </div>
+    <button class="btn-p" onclick="applyFilter()" id="btn-apply">✓ Uygula ve Keşfet</button>
+  </div>
+</div>
+
+</div></div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update, push, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDwgHokn3IZvZFRTsGgQJ0rpJGHDlsvJ_U",
+  authDomain: "cinematch-485eb.firebaseapp.com",
+  databaseURL: "https://cinematch-485eb-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "cinematch-485eb",
+  storageBucket: "cinematch-485eb.firebasestorage.app",
+  messagingSenderId: "859149010873",
+  appId: "1:859149010873:web:be3f0472ad7f2b22fe5868"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+window._db = db;
+window._dbFns = { ref, set, get, onValue, update, push, serverTimestamp };
+
+// ── TMDB ────────────────────────────────────────────────
+const TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkYjA5OWEwMDIwMzFkZmI0MzJlOGFhM2FjMTYyNDc4ZSIsIm5iZiI6MTc3NTQwNDQ1MS4xNDYsInN1YiI6IjY5ZDI4NWEzYmE4M2E4ZGI4YTA5MjVlZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.Ks_1AVecTiLeGMIiCWXGIG1qfY3lzC3rTzocrqShA2c';
+const IMG = 'https://image.tmdb.org/t/p/w500';
+const PLATS = {
+  8:{n:'Netflix',c:'p-netflix'},119:{n:'Prime',c:'p-prime'},
+  337:{n:'Disney+',c:'p-disney'},350:{n:'Apple TV+',c:'p-apple'},
+  11:{n:'MUBI',c:'p-mubi'},384:{n:'HBO Max',c:'p-hbo'},15:{n:'Hulu',c:'p-hulu'}
+};
+const PLAT_IDS = Object.keys(PLATS).map(Number);
+
+async function tmdb(path,lang='tr-TR'){
+  const r = await fetch('https://api.themoviedb.org/3'+path+'&language='+lang,
+    {headers:{Authorization:'Bearer '+TOKEN}});
+  return r.json();
+}
+
+// ── STATE ───────────────────────────────────────────────
+let lang = 'tr';
+let films=[], cur=0, matched=[], watchedArr=[];
+let busy=false, prev='scene-welcome', active='scene-welcome';
+let seenIds=new Set(), page=1, totalPages=10, fetching=false;
+let selGenres=[], fIMDB=6.0, fYear=2000, fDur=240;
+
+// Firebase room state
+let roomCode='', myRole='', myName='', partnerName='';
+let roomRef=null, swipesRef=null, roomListener=null;
+let partnerLikes={}; // movieId -> true
+
+// ── LANGUAGE ───────────────────────────────────────────
+const T = {
+  tr:{
+    heroH:'Film seçmek<br><em>hiç bu kadar</em><br>kolay olmadı',
+    heroP:'İki kişi, sonsuz film, tek eşleşme. Birlikte izleyeceğiniz filmi bulun.',
+    create:'Oda Oluştur', join:'Odaya Katıl', name:'Adın', code:'Oda Kodu',
+    shareHint:'Arkadaşına bu kodu gönder', codeNote:'Oda kodunu paylaş',
+    copy:'📋 Kopyala', copied:'✓ Kopyalandı!', continue:'Bekle →',
+    connected:'✓ Bağlı', waiting:'Bekleniyor', waitHint:'Arkadaşın kodu girince\notomatik başlayacak',
+    shareLabel:'Paylaşılacak kod: ',
+    pass:'GEÇ', watch:'İZLEDİM', like:'BEĞENDİM',
+    matchSub:'İkiniz de bu filmi beğendiniz!\nBirlikte izleme listesine eklendi. 🎉',
+    continueMatch:'Keşfe Devam Et →', seeMatches:'Eşleşmeleri Gör',
+    matches:'Eşleşmeler', watched:'İzlediklerim', filter:'Filtreler',
+    genre:'Tür', year:'Yıldan İtibaren:', dur:'Maks. Süre:',
+    apply:'✓ Uygula ve Keşfet',
+    navMatches:'EŞLEŞMELERİM', navDiscover:'KEŞFEDİN', navWatched:'İZLEDİKLERİM',
+    partnerOnline:'Partner çevrimiçi', loading:'TMDB\'den yükleniyor...',
+    noMore:'Tüm filmler bitti!\nFiltreleri değiştirip tekrar dene.',
+    restart:'Yeniden Başlat', emptyMatches:'Henüz eşleşme yok.\nSwipe etmeye devam edin!',
+    emptyWatched:'Henüz film işaretlemediniz.',
+    partnerLiked:'da beğendi! Karar senin...',
+    enterName:'Lütfen adını gir', enterCode:'Lütfen oda kodunu gir',
+    roomNotFound:'Oda bulunamadı! Kodu kontrol et.',
+    roomFull:'Bu oda dolu!', langBtn:'🌐 TR',
+    badgeLike:'♥ Eşleşme', badgeWatch:'👁 İzledim',
+  },
+  en:{
+    heroH:'Finding movies<br><em>has never been</em><br>this easy',
+    heroP:'Two people, endless movies, one match. Find the film you\'ll watch together.',
+    create:'Create Room', join:'Join Room', name:'Your Name', code:'Room Code',
+    shareHint:'Send this code to your friend', codeNote:'Share the room code',
+    copy:'📋 Copy', copied:'✓ Copied!', continue:'Wait →',
+    connected:'✓ Connected', waiting:'Waiting...', waitHint:'When your friend enters the code\nit will start automatically',
+    shareLabel:'Share code: ',
+    pass:'PASS', watch:'WATCHED', like:'LIKE',
+    matchSub:'You both liked this movie!\nAdded to your watch list. 🎉',
+    continueMatch:'Keep Exploring →', seeMatches:'See Matches',
+    matches:'Matches', watched:'Watched', filter:'Filters',
+    genre:'Genre', year:'From Year:', dur:'Max Duration:',
+    apply:'✓ Apply Filters',
+    navMatches:'MATCHES', navDiscover:'DISCOVER', navWatched:'WATCHED',
+    partnerOnline:'Partner is online', loading:'Loading from TMDB...',
+    noMore:'All movies done!\nChange filters and try again.',
+    restart:'Start Over', emptyMatches:'No matches yet.\nKeep swiping!',
+    emptyWatched:'No movies marked yet.',
+    partnerLiked:' liked it too! Your turn...',
+    enterName:'Please enter your name', enterCode:'Please enter the room code',
+    roomNotFound:'Room not found! Check the code.',
+    roomFull:'This room is full!', langBtn:'🌐 EN',
+    badgeLike:'♥ Match', badgeWatch:'👁 Watched',
+  }
+};
+
+window.toggleLang = function(){
+  lang = lang==='tr' ? 'en' : 'tr';
+  applyLang();
+};
+
+function applyLang(){
+  const t = T[lang];
+  document.querySelectorAll('.lang-btn').forEach(b=>b.textContent=t.langBtn);
+  document.getElementById('hero-h').innerHTML=t.heroH;
+  document.getElementById('hero-p').textContent=t.heroP;
+  document.getElementById('btn-create').textContent='✦ '+t.create;
+  document.getElementById('btn-join').textContent=t.join;
+  document.getElementById('t-create').textContent=t.create;
+  document.getElementById('t-join').textContent=t.join;
+  ['l-name','l-name2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=t.name; });
+  document.getElementById('l-code').textContent=t.code;
+  document.getElementById('share-hint').textContent=t.shareHint;
+  document.getElementById('code-note').textContent=t.codeNote;
+  document.getElementById('copyBtn').textContent=t.copy;
+  document.getElementById('btn-continue').textContent=t.continue;
+  document.getElementById('btn-do-create').textContent=t.create+' 🎬';
+  document.getElementById('btn-do-join').textContent=t.join+' →';
+  document.getElementById('t-connected').textContent=t.connected;
+  document.getElementById('t-waiting').textContent=t.waiting;
+  document.getElementById('wait-hint').innerHTML=t.waitHint.replace('\n','<br>');
+  document.getElementById('share-code-label').textContent=t.shareLabel;
+  document.getElementById('lbl-pass').textContent=t.pass;
+  document.getElementById('lbl-watch').textContent=t.watch;
+  document.getElementById('lbl-like').textContent=t.like;
+  document.getElementById('match-sub').innerHTML=t.matchSub.replace('\n','<br>');
+  document.getElementById('btn-continue-match').textContent=t.continueMatch;
+  document.getElementById('btn-see-matches').textContent=t.seeMatches;
+  document.getElementById('t-matches').textContent=t.matches;
+  document.getElementById('t-watched').textContent=t.watched;
+  document.getElementById('t-filter').textContent=t.filter;
+  document.getElementById('l-genre').textContent=t.genre;
+  document.getElementById('l-year').textContent=t.year+' '+document.getElementById('yearV').textContent;
+  document.getElementById('l-dur').textContent=t.dur+' '+document.getElementById('durV').textContent;
+  document.getElementById('btn-apply').textContent=t.apply;
+  document.getElementById('partnerStatus').textContent=t.partnerOnline;
+  ['nav-matches','nav-matches2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=t.navMatches; });
+  ['nav-discover','nav-discover2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=t.navDiscover; });
+  ['nav-watched','nav-watched2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=t.navWatched; });
+  // Re-render lists if open
+  if(active==='scene-matches') renderMatched();
+  if(active==='scene-watched') renderWatched();
+}
+
+// ── NAV ────────────────────────────────────────────────
+window.nav = function(id){
+  if(busy) return;
+  document.getElementById(active).classList.remove('in');
+  document.getElementById(active).classList.add('out');
+  prev=active; active=id;
+  setTimeout(()=>{
+    document.querySelectorAll('.scene').forEach(s=>{if(s.id!==id)s.classList.remove('in','out')});
+    document.getElementById(id).classList.remove('out');
+    document.getElementById(id).classList.add('in');
+    if(id==='scene-swipe') renderCard();
+    if(id==='scene-matches') renderMatched();
+    if(id==='scene-watched') renderWatched();
+  },130);
+};
+
+// ── TOAST ───────────────────────────────────────────────
+function showToast(msg, dur=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+// ── FIREBASE ROOM ───────────────────────────────────────
+window.createRoom = async function(){
+  const name = document.getElementById('hostName').value.trim();
+  if(!name){ showToast(T[lang].enterName); return; }
+  myName=name; myRole='host';
+
+  // Generate unique room code
+  const code = 'CIN-' + Math.floor(1000+Math.random()*9000);
+  roomCode = code;
+
+  const {ref:dbRef, set:dbSet} = window._dbFns;
+  const db = window._db;
+  await dbSet(dbRef(db, 'rooms/'+code), {
+    code, host:name, guest:null, status:'waiting',
+    created: Date.now()
+  });
+
+  document.getElementById('codeVal').textContent = code;
+  document.getElementById('codeBox').style.display = 'block';
+  document.getElementById('shareCodeDisplay').textContent = code;
+  document.getElementById('waitCode').textContent = code;
+  document.getElementById('hostAv').textContent = name[0].toUpperCase();
+  document.getElementById('hostAvName').textContent = name;
+  document.getElementById('matchAv1').textContent = name[0].toUpperCase();
+};
+
+window.copyCode = function(){
+  const code = document.getElementById('codeVal').textContent;
+  if(navigator.clipboard) navigator.clipboard.writeText(code);
+  const b=document.getElementById('copyBtn');
+  b.textContent=T[lang].copied;
+  setTimeout(()=>b.textContent=T[lang].copy,1500);
+};
+
+window.joinRoom = async function(){
+  const name = document.getElementById('guestName').value.trim();
+  const code = document.getElementById('joinCode').value.trim().toUpperCase();
+  const errEl = document.getElementById('join-error');
+  errEl.style.display='none';
+
+  if(!name){ showToast(T[lang].enterName); return; }
+  if(!code){ showToast(T[lang].enterCode); return; }
+
+  const {ref:dbRef, get:dbGet, update:dbUpdate} = window._dbFns;
+  const db = window._db;
+
+  try{
+    const snap = await dbGet(dbRef(db,'rooms/'+code));
+    if(!snap.exists()){
+      errEl.textContent=T[lang].roomNotFound; errEl.style.display='block'; return;
+    }
+    const room = snap.val();
+    if(room.guest){
+      errEl.textContent=T[lang].roomFull; errEl.style.display='block'; return;
+    }
+    await dbUpdate(dbRef(db,'rooms/'+code), {guest:name, status:'active'});
+    myName=name; myRole='guest'; roomCode=code;
+    partnerName=room.host;
+    document.getElementById('waitCode').textContent=code;
+    document.getElementById('hostAv').textContent=room.host[0].toUpperCase();
+    document.getElementById('hostAvName').textContent=room.host;
+    document.getElementById('shareCodeDisplay').textContent=code;
+    document.getElementById('matchAv1').textContent=room.host[0].toUpperCase();
+    document.getElementById('matchAv2').textContent=name[0].toUpperCase();
+    nav('scene-wait');
+    listenRoom();
+  }catch(e){ errEl.textContent='Hata: '+e.message; errEl.style.display='block'; }
+};
+
+function listenRoom(){
+  if(roomListener) roomListener();
+  const {ref:dbRef, onValue:dbOnValue} = window._dbFns;
+  const db = window._db;
+  roomRef = dbRef(db,'rooms/'+roomCode);
+  roomListener = dbOnValue(roomRef, snap=>{
+    if(!snap.exists()) return;
+    const room = snap.val();
+
+    // Update waiting screen
+    if(room.guest && room.host){
+      partnerName = myRole==='host' ? room.guest : room.host;
+      const gSlot=document.getElementById('gSlot');
+      gSlot.innerHTML=`<div class="av on">${room.guest[0].toUpperCase()}</div>
+        <div class="av-name">${room.guest}</div>
+        <div class="av-status ok">${T[lang].connected}</div>`;
+      document.getElementById('matchAv2').textContent=room.guest[0].toUpperCase();
+      document.getElementById('roomLabel').textContent=`${room.host} & ${room.guest}`;
+    }
+
+    // Auto-start when both connected
+    if(room.status==='active' && active==='scene-wait'){
+      setTimeout(()=>{
+        films=[];cur=0;seenIds=new Set();page=1;fetching=false;
+        listenSwipes();
+        nav('scene-swipe');
+        fetchPage();
+      },600);
+    }
+  });
+}
+
+// When host navigates to wait, also listen
+window.listenAsHost = function(){
+  listenRoom();
+};
+
+// Override nav for wait scene when host
+const origNav = window.nav;
+window.nav = function(id){
+  origNav(id);
+  if(id==='scene-wait' && myRole==='host'){
+    setTimeout(listenRoom, 200);
+  }
+};
+
+window.leaveRoom = function(){
+  if(roomListener){ roomListener(); roomListener=null; }
+  roomCode=''; myRole=''; myName=''; partnerName='';
+  partnerLikes={};
+  nav('scene-welcome');
+};
+
+// ── SWIPE SYNC ─────────────────────────────────────────
+function listenSwipes(){
+  const {ref:dbRef, onValue:dbOnValue} = window._dbFns;
+  const db = window._db;
+  const partnerRole = myRole==='host'?'guest':'host';
+  swipesRef = dbRef(db,'rooms/'+roomCode+'/swipes/'+partnerRole);
+  dbOnValue(swipesRef, snap=>{
+    if(!snap.exists()) return;
+    const data = snap.val();
+    // Check each movie partner liked
+    Object.keys(data).forEach(movieId=>{
+      if(data[movieId]==='like'){
+        partnerLikes[movieId]=true;
+        // Check if I also liked it → match!
+        checkMatch(movieId);
+      }
+    });
+  });
+}
+
+async function saveSwipe(movieId, action){
+  const {ref:dbRef, update:dbUpdate} = window._dbFns;
+  const db = window._db;
+  const path = 'rooms/'+roomCode+'/swipes/'+myRole+'/'+movieId;
+  await dbUpdate(dbRef(db,'rooms/'+roomCode+'/swipes/'+myRole), {[movieId]:action});
+}
+
+async function checkMatch(movieId){
+  // Check my own swipes for this movie
+  const {ref:dbRef, get:dbGet} = window._dbFns;
+  const db = window._db;
+  const snap = await dbGet(dbRef(db,'rooms/'+roomCode+'/swipes/'+myRole+'/'+movieId));
+  if(snap.exists() && snap.val()==='like'){
+    // Real match!
+    const film = films.find(f=>String(f.id)===String(movieId));
+    if(film && !matched.find(m=>m.id===film.id)){
+      matched.push(film);
+      showMatch(film);
+    }
+  }
+}
+
+// ── TMDB FETCH ─────────────────────────────────────────
+async function fetchPage(){
+  if(fetching||page>totalPages) return;
+  fetching=true; showLoader();
+  try{
+    const tmdbLang = lang==='tr'?'tr-TR':'en-US';
+    const gParam=selGenres.length?'&with_genres='+selGenres.join(','):'';
+    const url=`/discover/movie?sort_by=popularity.desc&page=${page}&vote_count.gte=80&vote_average.gte=${fIMDB}&primary_release_date.gte=${fYear}-01-01${gParam}`;
+    const data = await tmdb(url, tmdbLang);
+    totalPages=Math.min(data.total_pages||1,15);
+    const results=data.results||[];
+    const batch=[];
+    await Promise.all(results.map(async m=>{
+      if(m.adult||seenIds.has(m.id)) return;
+      seenIds.add(m.id);
+      try{
+        const [det,prov] = await Promise.all([
+          tmdb(`/movie/${m.id}?`, tmdbLang),
+          tmdb(`/movie/${m.id}/watch/providers?`, 'en-US')
+        ]);
+        const rt=det.runtime||0;
+        if(fDur<240&&rt>fDur&&rt>0) return;
+        const pr=prov.results||{};
+        const reg=pr['TR']||pr['US']||pr['GB']||{};
+        const flat=(reg.flatrate||[]).filter(p=>PLAT_IDS.includes(p.provider_id)).map(p=>({...PLATS[p.provider_id]}));
+        const gnames=(det.genres||[]).map(g=>g.name).slice(0,2).join(' / ')||'Film';
+        batch.push({
+          id:m.id, title:m.title||m.original_title,
+          desc:m.overview||'—', poster:m.poster_path?IMG+m.poster_path:null,
+          year:(m.release_date||'').slice(0,4),
+          imdb:m.vote_average?m.vote_average.toFixed(1):'—',
+          genre:gnames, runtime:rt?rt+' '+(lang==='tr'?'dk':'min'):'—',
+          platforms:flat, tagline:det.tagline||''
+        });
+      }catch(e){}
+    }));
+    // Shuffle
+    for(let i=batch.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[batch[i],batch[j]]=[batch[j],batch[i]];}
+    films=films.concat(batch);
+    page++;
+  }catch(e){ console.error(e); }
+  fetching=false;
+  renderCard();
+}
+
+window.fetchPage = fetchPage;
+
+function showLoader(){
+  if(active!=='scene-swipe') return;
+  const w=document.getElementById('swipeWrap');
+  if(films.length===0) w.innerHTML=`<div class="loading-screen"><div class="spin"></div><div class="loading-text">${T[lang].loading}</div></div>`;
+}
+
+// ── CARD RENDER ────────────────────────────────────────
+function renderCard(){
+  if(active!=='scene-swipe') return;
+  const w=document.getElementById('swipeWrap');
+  if(cur>=films.length){
+    if(!fetching&&page<=totalPages){ fetchPage(); w.innerHTML=`<div class="loading-screen"><div class="spin"></div><div class="loading-text">${T[lang].loading}</div></div>`; return; }
+    w.innerHTML=`<div class="no-more"><div class="no-more-icon">🎬</div><div class="no-more-text">${T[lang].noMore.replace('\n','<br>')}</div><button class="btn-p" style="margin-top:16px" onclick="resetFilms()">${T[lang].restart}</button></div>`;
+    return;
+  }
+  const f=films[cur];
+  const pct=Math.round(((cur+1)/Math.max(films.length,1))*100);
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progTxt').textContent=`${lang==='tr'?'Film':'Movie'} ${cur+1} / ${films.length}`;
+
+  // Check if partner already liked this film
+  const partnerAlreadyLiked = partnerLikes[String(f.id)];
+  const partnerHint = partnerAlreadyLiked
+    ? `<div style="background:rgba(0,201,167,.1);border:1px solid rgba(0,201,167,.3);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--teal);margin-bottom:6px">💚 ${partnerName||'Partner'}${T[lang].partnerLiked}</div>`
+    : '';
+
+  let platHtml = f.platforms.length
+    ? f.platforms.slice(0,4).map(p=>`<div class="plat ${p.c}">${p.n}</div>`).join('')
+    : `<div class="plat p-none">${lang==='tr'?'Platform bilgisi yok':'No platform info'}</div>`;
+
+  w.innerHTML=`<div class="mcard" id="mCard">
+    <div class="poster-area">
+      ${f.poster?`<img class="poster-img" src="${f.poster}" alt="" loading="lazy" onerror="this.style.display='none'">`:``}
+      <div class="poster-fallback" ${f.poster?'style="display:none"':''}>🎬</div>
+      <div class="poster-grad"></div>
+      <div class="poster-overlay">
+        <div class="genre-pill">${f.genre.split(' / ')[0]}</div>
+        <div class="movie-title">${f.title}</div>
+        <div class="movie-meta">
+          <span>${f.year}</span>
+          ${f.runtime!=='—'?`<span>·</span><span>${f.runtime}</span>`:''}
+          <span>·</span><div class="imdb-tag">⭐ ${f.imdb}</div>
+        </div>
+        <div class="platforms">${platHtml}</div>
+      </div>
+    </div>
+    <div class="card-body">
+      ${partnerHint}
+      <div class="card-desc">${f.desc}</div>
+      ${f.tagline?`<div class="tagline">"${f.tagline}"</div>`:''}
+    </div>
+    <div class="stamp like" id="sL">LIKE ♥</div>
+    <div class="stamp nope" id="sN">NOPE ✗</div>
+  </div>`;
+
+  setupGesture();
+  if(!fetching&&page<=totalPages&&films.length-cur<6) fetchPage();
+}
+window.renderCard=renderCard;
+
+function setupGesture(){
+  const c=document.getElementById('mCard');
+  if(!c) return;
+  let sx=0,dragging=false;
+  c.addEventListener('mousedown',e=>{sx=e.clientX;dragging=true;});
+  const mm=e=>{
+    if(!dragging) return;
+    const dx=e.clientX-sx;
+    const el=document.getElementById('mCard');if(!el) return;
+    el.style.transform=`translateX(${dx*.35}px) rotate(${dx*.04}deg)`;
+    const sl=document.getElementById('sL'),sn=document.getElementById('sN');
+    if(sl) sl.style.opacity=dx>35?'1':'0';
+    if(sn) sn.style.opacity=dx<-35?'1':'0';
+  };
+  const mu=e=>{
+    if(!dragging) return; dragging=false;
+    document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);
+    const dx=e.clientX-sx;
+    const el=document.getElementById('mCard');if(el) el.style.transform='';
+    const sl=document.getElementById('sL'),sn=document.getElementById('sN');
+    if(sl) sl.style.opacity='0';if(sn) sn.style.opacity='0';
+    if(Math.abs(dx)>65) act(dx>0?'like':'pass');
+  };
+  document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);
+  c.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});
+  c.addEventListener('touchmove',e=>{
+    const dx=e.touches[0].clientX-sx;
+    const el=document.getElementById('mCard');if(!el) return;
+    el.style.transform=`translateX(${dx*.35}px) rotate(${dx*.04}deg)`;
+    const sl=document.getElementById('sL'),sn=document.getElementById('sN');
+    if(sl) sl.style.opacity=dx>30?'1':'0';if(sn) sn.style.opacity=dx<-30?'1':'0';
+  },{passive:true});
+  c.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-sx;
+    const el=document.getElementById('mCard');if(el) el.style.transform='';
+    const sl=document.getElementById('sL'),sn=document.getElementById('sN');
+    if(sl) sl.style.opacity='0';if(sn) sn.style.opacity='0';
+    if(Math.abs(dx)>55) act(dx>0?'like':'pass');
+  });
+}
+
+// ── ACTIONS ────────────────────────────────────────────
+window.act = function(action){
+  if(busy||cur>=films.length) return;
+  busy=true;
+  const f=films[cur];
+  const c=document.getElementById('mCard');
+  if(!c){busy=false;return;}
+
+  if(action==='like'){
+    c.classList.add('goRight');
+    setTimeout(async()=>{
+      // Save to Firebase
+      if(roomCode) await saveSwipe(String(f.id),'like');
+      busy=false;
+      // Check if partner already liked it
+      if(partnerLikes[String(f.id)]){
+        if(!matched.find(m=>m.id===f.id)) matched.push(f);
+        showMatch(f);
+      } else { cur++; renderCard(); }
+    },390);
+  } else if(action==='pass'){
+    c.classList.add('goLeft');
+    setTimeout(async()=>{
+      if(roomCode) await saveSwipe(String(f.id),'pass');
+      busy=false; cur++; renderCard();
+    },390);
+  } else {
+    c.classList.add('goCenter');
+    setTimeout(async()=>{
+      if(roomCode) await saveSwipe(String(f.id),'watch');
+      watchedArr.push(f); busy=false; cur++; renderCard();
+    },300);
+  }
+};
+
+window.resetFilms = function(){
+  films=[];cur=0;seenIds=new Set();page=1;fetching=false;renderCard();fetchPage();
+};
+
+// ── MATCH ──────────────────────────────────────────────
+function showMatch(f){
+  const pw=document.getElementById('matchPosterWrap');
+  if(f.poster){ pw.innerHTML=`<div class="match-poster"><img src="${f.poster}" alt=""></div>`; }
+  else { pw.innerHTML=`<div class="match-poster">🎬</div>`; }
+  document.getElementById('matchTitle').textContent=f.title;
+  // Save match to Firebase
+  if(roomCode){
+    const {ref:dbRef,update:dbUpdate}=window._dbFns;
+    dbUpdate(dbRef(window._db,'rooms/'+roomCode+'/matches'),{[String(f.id)]:true});
+  }
+  spawnConf(); nav('scene-match');
+}
+
+window.afterMatch = function(){ cur++; nav('scene-swipe'); };
+
+function spawnConf(){
+  const layer=document.getElementById('confLayer');layer.innerHTML='';
+  const cols=['#e8405a','#ff7090','#a78bfa','#00c9a7','#f5c518','#ff9de2','#7c3aed'];
+  for(let i=0;i<45;i++){
+    const d=document.createElement('div');d.className='conf';
+    const s=4+Math.random()*10,isC=Math.random()>.5;
+    d.style.cssText=`width:${s}px;height:${isC?s:s*1.9}px;background:${cols[Math.floor(Math.random()*cols.length)]};left:${Math.random()*100}%;top:-25px;animation-duration:${2+Math.random()*3.2}s;animation-delay:${Math.random()*.6}s;border-radius:${isC?'50%':'3px'}`;
+    layer.appendChild(d);
+  }
+}
+
+// ── LISTS ──────────────────────────────────────────────
+function movieItemHTML(f,badge,badgeCls){
+  const pm=f.platforms.slice(0,2).map(p=>`<div class="plat ${p.c}" style="font-size:9px;padding:2px 6px">${p.n}</div>`).join('');
+  return `<div class="mitem">
+    <div class="mitem-poster">${f.poster?`<img src="${f.poster}" alt="" loading="lazy">`:'🎬'}</div>
+    <div class="mitem-info">
+      <div class="mitem-title">${f.title}</div>
+      <div class="mitem-meta"><span>${f.year}</span><span>·</span><div class="imdb-tag">⭐ ${f.imdb}</div></div>
+      ${pm?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px">${pm}</div>`:''}
+      <div class="badge ${badgeCls}">${badge}</div>
+    </div>
+  </div>`;
+}
+
+function renderMatched(){
+  const el=document.getElementById('matchList');
+  document.getElementById('mCount').textContent=matched.length;
+  el.innerHTML=matched.length
+    ?matched.map(f=>movieItemHTML(f,T[lang].badgeLike,'badge-m')).join('')
+    :`<div class="empty-state"><div class="empty-icon">💔</div><div class="empty-text">${T[lang].emptyMatches.replace('\n','<br>')}</div></div>`;
+}
+function renderWatched(){
+  const el=document.getElementById('watchedList');
+  document.getElementById('wCount').textContent=watchedArr.length;
+  el.innerHTML=watchedArr.length
+    ?watchedArr.map(f=>movieItemHTML(f,T[lang].badgeWatch,'badge-w')).join('')
+    :`<div class="empty-state"><div class="empty-icon">👁</div><div class="empty-text">${T[lang].emptyWatched}</div></div>`;
+}
+
+// ── FILTER ─────────────────────────────────────────────
+window.applyFilter = function(){
+  fIMDB=parseFloat(document.getElementById('imdbRange').value);
+  fYear=parseInt(document.getElementById('yearRange').value);
+  fDur=parseInt(document.getElementById('durRange').value);
+  selGenres=[...document.querySelectorAll('.gchip.sel')].map(c=>c.dataset.id);
+  films=[];cur=0;seenIds=new Set();page=1;fetching=false;
+  nav('scene-swipe'); fetchPage();
+};
+
+// Genre chips
+const GENRES=[
+  {id:28,tr:'Aksiyon',en:'Action'},{id:12,tr:'Macera',en:'Adventure'},
+  {id:16,tr:'Animasyon',en:'Animation'},{id:35,tr:'Komedi',en:'Comedy'},
+  {id:80,tr:'Suç',en:'Crime'},{id:99,tr:'Belgesel',en:'Documentary'},
+  {id:18,tr:'Drama',en:'Drama'},{id:14,tr:'Fantastik',en:'Fantasy'},
+  {id:36,tr:'Tarih',en:'History'},{id:27,tr:'Korku',en:'Horror'},
+  {id:9648,tr:'Gizem',en:'Mystery'},{id:10749,tr:'Romantik',en:'Romance'},
+  {id:878,tr:'Sci-Fi',en:'Sci-Fi'},{id:53,tr:'Gerilim',en:'Thriller'},
+  {id:10752,tr:'Savaş',en:'War'},
+];
+const gc=document.getElementById('genreChips');
+GENRES.forEach(g=>{
+  const b=document.createElement('button');
+  b.className='gchip';
+  b.textContent=g[lang]||g.tr;
+  b.dataset.id=g.id;
+  b.dataset.tr=g.tr; b.dataset.en=g.en;
+  b.onclick=()=>b.classList.toggle('sel');
+  gc.appendChild(b);
+});
+
+// Update genre chip labels on lang change
+const origToggle=window.toggleLang;
+window.toggleLang=function(){
+  lang=lang==='tr'?'en':'tr';
+  document.querySelectorAll('#genreChips .gchip').forEach(b=>b.textContent=b.dataset[lang]);
+  applyLang();
+};
+
+// Init
+applyLang();
+</script>
+</body>
+</html>
